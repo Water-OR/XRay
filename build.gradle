@@ -107,6 +107,13 @@ repositories {
         name 'CleanroomMC Maven'
         url 'https://maven.cleanroommc.com'
     }
+    maven {
+        name 'Curse Maven'
+        url 'https://cursemaven.com'
+        content {
+            includeGroup 'curse.maven'
+        }
+    }
 }
 
 dependencies {
@@ -146,6 +153,7 @@ dependencies {
     }
 
     implementation 'org.jetbrains:annotations:24.0.0'
+//    api 'curse.maven:biomes-o-plenty-220318:2842510'
 }
 
 apply from: 'gradle/scripts/dependencies.gradle'

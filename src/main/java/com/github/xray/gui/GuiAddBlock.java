@@ -48,6 +48,13 @@ public class GuiAddBlock extends GuiScreen implements IHasParent, IXrayBG {
         private final GuiTextField searchBar = new GuiTextField(0, Minecraft.instance.fontRenderer, 12, 16, 232, 24);
         private final ActiveList activeList = new ActiveList();
         private final List<ItemStack> blockList = new ArrayList<>();
+        private final NonNullList<ItemStack> blockListWrapper = new NonNullList<ItemStack>(blockList, ItemStack.EMPTY) {
+                @Override
+                public void add(int i, @NotNull ItemStack stack) {
+                        if (!stack.isEmpty() && stack.getItem() instanceof ItemBlock && !Controller.blackList.contains(((ItemBlock) stack.getItem()).getBlock()) &&
+                            !BlockStores.DATA_MAP.containsKey(BlockInfo.fromStack(stack)) && stack.getDisplayName().contains(searchBar.getText())) { super.add(i, stack); }
+                }
+        };
         private ItemStack current = ItemStack.EMPTY;
         
         public GuiAddBlock(GuiConfigScreen parent) {
@@ -59,7 +66,7 @@ public class GuiAddBlock extends GuiScreen implements IHasParent, IXrayBG {
         }
         
         @Override
-        protected void actionPerformed(@NotNull GuiButton button) throws IOException {
+        protected void actionPerformed(@NotNull GuiButton button) {
                 if (button.id == BUTTON_BACK) {
                         mc.player.closeScreen();
                 } else if (button.id == BUTTON_ADD_HAND) {
@@ -71,7 +78,7 @@ public class GuiAddBlock extends GuiScreen implements IHasParent, IXrayBG {
                         } else if (Controller.blackList.contains(block)) {
                                 Utils.sendFormatMessage("xray.msg.blacklist");
                         } else {
-                                BlockData data = new BlockData(block.getLocalizedName(), block, stack.getMetadata(), true, Color.fromRGB(16777215));
+                                BlockData data = new BlockData("", block, stack.getMetadata(), true, Color.fromRGB(16777215));
                                 BlockStores.add(data);
                                 mc.displayGuiScreen(new GuiEditScreen(this.parent, data));
                         }
@@ -84,7 +91,7 @@ public class GuiAddBlock extends GuiScreen implements IHasParent, IXrayBG {
                                 } else if (Controller.blackList.contains(state.getBlock())) {
                                         Utils.sendFormatMessage("xray.msg.blacklist");
                                 } else {
-                                        BlockData data = new BlockData(state.getBlock().getLocalizedName(), state.getBlock(), state.getBlock().getMetaFromState(state), true, Color.fromRGB(16777215));
+                                        BlockData data = new BlockData("", state.getBlock(), state.getBlock().getMetaFromState(state), true, Color.fromRGB(16777215));
                                         BlockStores.add(data);
                                         mc.displayGuiScreen(new GuiEditScreen(this.parent, data));
                                 }
@@ -94,14 +101,7 @@ public class GuiAddBlock extends GuiScreen implements IHasParent, IXrayBG {
         
         public void reload() {
                 blockList.clear();
-                NonNullList<ItemStack> blocks = new NonNullList<ItemStack>(blockList, ItemStack.EMPTY) {
-                        @Override
-                        public void add(int i, @NotNull ItemStack stack) {
-                                if (!stack.isEmpty() && stack.getItem() instanceof ItemBlock && !Controller.blackList.contains(((ItemBlock) stack.getItem()).getBlock()) &&
-                                    !BlockStores.DATA_MAP.containsKey(BlockInfo.fromStack(stack)) && stack.getDisplayName().contains(searchBar.getText())) { super.add(i, stack); }
-                        }
-                };
-                Block.REGISTRY.forEach(block -> block.getSubBlocks(CreativeTabs.SEARCH, blocks));
+                CreativeTabs.SEARCH.displayAllRelevantItems(blockListWrapper);
                 
                 activeList.reload();
         }
@@ -162,19 +162,19 @@ public class GuiAddBlock extends GuiScreen implements IHasParent, IXrayBG {
         protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
                 super.mouseClicked(mouseX, mouseY, mouseButton);
                 searchBar.mouseClicked(mouseX - drawX, mouseY - drawY, mouseButton);
-                activeList.mouseClicked(mouseX - drawX, mouseY - drawY, mouseButton);
+                activeList.mouseClicked(mouseX - drawX, mouseY - drawY);
         }
         
         @Override
         protected void mouseClickMove(int mouseX, int mouseY, int clickedMouseButton, long timeSinceLastClick) {
                 super.mouseClickMove(mouseX, mouseY, clickedMouseButton, timeSinceLastClick);
-                activeList.mouseDrag(mouseX - drawX, mouseY - drawY);
+                activeList.mouseDrag(mouseY - drawY);
         }
         
         @Override
         protected void mouseReleased(int mouseX, int mouseY, int state) {
                 super.mouseReleased(mouseX, mouseY, state);
-                activeList.mouseRelease(mouseX - drawX, mouseY - drawY);
+                activeList.mouseRelease();
         }
         
         @Override
@@ -205,7 +205,6 @@ public class GuiAddBlock extends GuiScreen implements IHasParent, IXrayBG {
                 
                 private boolean focusBar;
                 private double preScrolled;
-                private int preMouseX;
                 private int preMouseY;
                 
                 public ActiveList() { }
@@ -308,13 +307,12 @@ public class GuiAddBlock extends GuiScreen implements IHasParent, IXrayBG {
                         GL11.glTranslated(-drawX, -drawY + scrolled, 0);
                 }
                 
-                public void mouseClicked(int mouseX, int mouseY, int mouseButton) {
+                public void mouseClicked(int mouseX, int mouseY) {
                         if (!hovered) { return; }
                         
                         if (hasBar && drawX + width - 6 <= mouseX && mouseX <= drawX + width) {
                                 if (drawY + barScrolled <= mouseY && mouseY <= drawY + barScrolled + barHeight) {
                                         focusBar = true;
-                                        preMouseX = mouseX;
                                         preMouseY = mouseY;
                                         preScrolled = scrolled;
                                 }
@@ -326,14 +324,14 @@ public class GuiAddBlock extends GuiScreen implements IHasParent, IXrayBG {
                         mc.displayGuiScreen(new GuiEditScreen(parent, newData));
                 }
                 
-                public void mouseDrag(int mouseX, int mouseY) {
+                public void mouseDrag(int mouseY) {
                         if (hasBar && focusBar) {
                                 scrolled = preScrolled + (double) (mouseY - preMouseY) / (height - barHeight) * scrollableHeight;
                                 clampScroll();
                         }
                 }
                 
-                public void mouseRelease(int mouseX, int mouseY) {
+                public void mouseRelease() {
                         focusBar = false;
                 }
                 
