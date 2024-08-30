@@ -61,7 +61,7 @@ public class GuiConfigScreen extends GuiScreen implements IXrayBG {
         }
         
         @Override
-        protected void actionPerformed(@NotNull GuiButton button) throws IOException {
+        protected void actionPerformed(@NotNull GuiButton button) {
                 if (button.id == BUTTON_CLOSE) {
                         mc.player.closeScreen();
                 } else if (button.id == BUTTON_RELOAD) {
@@ -177,13 +177,13 @@ public class GuiConfigScreen extends GuiScreen implements IXrayBG {
         @Override
         protected void mouseClickMove(int mouseX, int mouseY, int clickedMouseButton, long timeSinceLastClick) {
                 super.mouseClickMove(mouseX, mouseY, clickedMouseButton, timeSinceLastClick);
-                activeList.mouseDrag(mouseX - drawX, mouseY - drawY);
+                activeList.mouseDrag(mouseY - drawY);
         }
         
         @Override
         protected void mouseReleased(int mouseX, int mouseY, int state) {
                 super.mouseReleased(mouseX, mouseY, state);
-                activeList.mouseRelease(mouseX, mouseY);
+                activeList.mouseRelease();
                 radiusSlider.mouseReleased(mouseX - drawX, mouseY - drawY);
         }
         
@@ -219,7 +219,6 @@ public class GuiConfigScreen extends GuiScreen implements IXrayBG {
                 
                 private boolean focusBar;
                 private double preScrolled;
-                private int preMouseX;
                 private int preMouseY;
                 
                 public ActiveList() { }
@@ -234,7 +233,7 @@ public class GuiConfigScreen extends GuiScreen implements IXrayBG {
                 
                 public void drawElement(int i, int left, int right, int top, int bottom) {
                         final BlockData data = dataList.get(i);
-                        fontRenderer.drawString(data.name(), left + 30, top + 5, -1);
+                        fontRenderer.drawString(data.getStack().getDisplayName(), left + 30, top + 5, -1);
                         fontRenderer.drawString(I18n.format("xray.gui.config." + (data.active ? "enabled" : "disabled")).trim(),
                                                 left + 30, top + 15, data.active ? 65280 : 16711680);
                         
@@ -345,7 +344,6 @@ public class GuiConfigScreen extends GuiScreen implements IXrayBG {
                         if (hasBar && drawX + width - 6 <= mouseX && mouseX <= drawX + width) {
                                 if (drawY + barScrolled <= mouseY && mouseY <= drawY + barScrolled + barHeight) {
                                         focusBar = true;
-                                        preMouseX = mouseX;
                                         preMouseY = mouseY;
                                         preScrolled = scrolled;
                                 }
@@ -363,16 +361,14 @@ public class GuiConfigScreen extends GuiScreen implements IXrayBG {
                         }
                 }
                 
-                public void mouseDrag(int mouseX, int mouseY) {
+                public void mouseDrag(int mouseY) {
                         if (hasBar && focusBar) {
                                 scrolled = preScrolled + (double) (mouseY - preMouseY) / (height - barHeight) * scrollableHeight;
                                 clampScroll();
                         }
                 }
                 
-                public void mouseRelease(int mouseX, int mouseY) {
-                        focusBar = false;
-                }
+                public void mouseRelease() { focusBar = false; }
                 
                 public void handleMouse() {
                         if (!hovered) { return; }
