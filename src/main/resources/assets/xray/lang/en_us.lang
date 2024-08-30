@@ -1,0 +1,38 @@
+xray.gui.config.title=X Ray Config
+xray.gui.config.enabled=Enabled
+xray.gui.config.disabled=Disabled
+xray.gui.config.button.close=Close
+xray.gui.config.button.reload=Reload
+xray.gui.config.button.add_block=Add Block
+xray.gui.config.slider.prefix=Radius:
+xray.gui.config.slider.suffix=Blocks
+xray.gui.config.search=Search...
+xray.gui.config.width=Line Width
+xray.gui.config.fade=Fade
+xray.gui.config.show_active=Show Active
+
+xray.gui.edit.title=Edit Block
+xray.gui.edit.save=Save
+xray.gui.edit.delete=Delete
+xray.gui.edit.slider.alpha.prefix=Alpha:
+xray.gui.edit.slider.red.prefix=Red:
+xray.gui.edit.slider.green.prefix=Green:
+xray.gui.edit.slider.blue.prefix=Blue:
+xray.gui.edit.slider.alpha.suffix=/ 255
+xray.gui.edit.slider.red.suffix=/ 255
+xray.gui.edit.slider.green.suffix=/ 255
+xray.gui.edit.slider.blue.suffix=/ 255
+
+xray.gui.add.title=Add Block
+xray.gui.add.button.back=Back
+xray.gui.add.button.add_look=Add Block Looking At
+xray.gui.add.button.add_hand=Add Block in Hand
+
+xray.overlay.text=Xray Enabled
+
+xray.msg.nothing_find=Can't find anything in front of you!
+xray.msg.duplicate=Adding Duplicate Block
+xray.msg.blacklist=Adding Blacklist Block
+
+xray.key.open_menu=Open Menu
+xray.key.toggle_xray=Toggle Xray

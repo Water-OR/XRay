@@ -1,0 +1,38 @@
+xray.gui.config.title=X Ray 配置
+xray.gui.config.enabled=启用
+xray.gui.config.disabled=禁用
+xray.gui.config.button.close=关闭
+xray.gui.config.button.reload=重载
+xray.gui.config.button.add_block=添加方块
+xray.gui.config.slider.prefix=范围
+xray.gui.config.slider.suffix=格
+xray.gui.config.search=搜索...
+xray.gui.config.width=线宽度
+xray.gui.config.fade=淡出
+xray.gui.config.show_active=显示开启
+
+xray.gui.edit.title=方块编辑
+xray.gui.edit.save=保存
+xray.gui.edit.delete=删除
+xray.gui.edit.slider.alpha.prefix=透明度:
+xray.gui.edit.slider.red.prefix=红:
+xray.gui.edit.slider.green.prefix=绿:
+xray.gui.edit.slider.blue.prefix=蓝:
+xray.gui.edit.slider.alpha.suffix=/ 255
+xray.gui.edit.slider.red.suffix=/ 255
+xray.gui.edit.slider.green.suffix=/ 255
+xray.gui.edit.slider.blue.suffix=/ 255
+
+xray.gui.add.title=添加方块
+xray.gui.add.button.back=返回
+xray.gui.add.button.add_look=添加看着的方块
+xray.gui.add.button.add_hand=添加手上的方块
+
+xray.overlay.text=Xray 开启
+
+xray.msg.nothing_find=在你面前找不到任何东西！
+xray.msg.duplicate=添加重复的方块！
+xray.msg.blacklist=添加黑名单方块！
+
+xray.key.open_menu=开启菜单
+xray.key.toggle_xray=开关 Xray
