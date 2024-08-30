@@ -321,7 +321,9 @@ public class GuiAddBlock extends GuiScreen implements IHasParent, IXrayBG {
                                 return;
                         }
                         
-                        mc.displayGuiScreen(new GuiEditScreen(parent, new BlockData("", ((ItemBlock) current.getItem()).getBlock(), current.getMetadata(), true, Color.fromRGB(16777215))));
+                        final BlockData newData = new BlockData("", ((ItemBlock) current.getItem()).getBlock(), current.getMetadata(), true, Color.fromRGB(16777215));
+                        BlockStores.add(newData);
+                        mc.displayGuiScreen(new GuiEditScreen(parent, newData));
                 }
                 
                 public void mouseDrag(int mouseX, int mouseY) {
