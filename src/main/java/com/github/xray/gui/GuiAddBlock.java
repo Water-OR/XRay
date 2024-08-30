@@ -97,7 +97,7 @@ public class GuiAddBlock extends GuiScreen implements IHasParent, IXrayBG {
                 NonNullList<ItemStack> blocks = new NonNullList<ItemStack>(blockList, ItemStack.EMPTY) {
                         @Override
                         public void add(int i, @NotNull ItemStack stack) {
-                                if (!stack.isEmpty() && !Controller.blackList.contains(((ItemBlock) stack.getItem()).getBlock()) &&
+                                if (!stack.isEmpty() && stack.getItem() instanceof ItemBlock && !Controller.blackList.contains(((ItemBlock) stack.getItem()).getBlock()) &&
                                     !BlockStores.DATA_MAP.containsKey(BlockInfo.fromStack(stack)) && stack.getDisplayName().contains(searchBar.getText())) { super.add(i, stack); }
                         }
                 };
