@@ -73,7 +73,7 @@ public class GuiEditScreen extends GuiScreen implements IHasParent, IXrayBG {
         }
         
         @Override
-        protected void actionPerformed(@NotNull GuiButton button) throws IOException {
+        protected void actionPerformed(@NotNull GuiButton button) {
                 if (button.id == BUTTON_SAVE) {
                         mc.player.closeScreen();
                 } else if (button.id == BUTTON_DELETE) {
@@ -102,7 +102,7 @@ public class GuiEditScreen extends GuiScreen implements IHasParent, IXrayBG {
                 
                 nameBar.drawTextBox();
                 if (nameBar.getText().isEmpty() && !nameBar.isFocused()) {
-                        fontRenderer.drawStringWithShadow(data.block.getLocalizedName(), 16, 24, 0xA7A7A7);
+                        fontRenderer.drawStringWithShadow(data.getStack().getDisplayName(), 16, 24, 0xA7A7A7);
                 }
                 
                 sliderAlpha.drawButton(mc, mouseX - drawX, mouseY - drawY, partialTicks);

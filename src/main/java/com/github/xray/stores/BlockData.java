@@ -14,6 +14,7 @@ import java.util.Objects;
 
 @SideOnly (Side.CLIENT)
 public class BlockData {
+        public ItemStack stack;
         public String displayName;
         public Block block;
         public int metadata;
@@ -27,6 +28,7 @@ public class BlockData {
                 this.metadata = metadata;
                 this.active = active;
                 this.color = color;
+                update();
         }
         
         public void toggle() { active = !active; }
@@ -36,36 +38,45 @@ public class BlockData {
                 
                 while (reader.hasNext()) {
                         String name = reader.nextName();
-                        if (name.equals("Display Name")) {
-                                displayName = reader.nextString();
-                        } else if (name.equals("Block")) {
-                                block = Block.getBlockFromName(reader.nextString());
-                        } else if (name.equals("Metadata")) {
-                                metadata = reader.nextInt();
-                        } else if (name.equals("Active")) {
-                                active = reader.nextBoolean();
-                        } else if (name.equals("Color")) {
-                                color = new Color().read(reader);
-                        } else {
-                                reader.skipValue();
+                        switch (name) {
+                                case "Display Name":
+                                        displayName = reader.nextString();
+                                        break;
+                                case "Block":
+                                        block = Block.getBlockFromName(reader.nextString());
+                                        break;
+                                case "Metadata":
+                                        metadata = reader.nextInt();
+                                        break;
+                                case "Active":
+                                        active = reader.nextBoolean();
+                                        break;
+                                case "Color":
+                                        color = new Color().read(reader);
+                                        break;
+                                default:
+                                        reader.skipValue();
+                                        break;
                         }
                 }
                 
                 reader.endObject();
-                
+                update();
                 return this;
         }
         
-        public JsonWriter write(@NotNull JsonWriter writer) throws IOException {
+        public void write(@NotNull JsonWriter writer) throws IOException {
                 writer.beginObject()
                       .name("Display Name").value(displayName)
                       .name("Block").value(Objects.requireNonNull(block.getRegistryName()).toString())
                       .name("Metadata").value(metadata)
                       .name("Active").value(active);
-                return color.write(writer.name("Color")).endObject();
+                color.write(writer.name("Color")).endObject();
         }
         
-        public ItemStack getStack() { return new ItemStack(block, 1, metadata); }
+        public void update() { stack = new ItemStack(block, 1, metadata); }
+        
+        public ItemStack getStack() { return stack; }
         
         public @NotNull String name() { return displayName.isEmpty() ? block.getLocalizedName() : displayName; }
         
