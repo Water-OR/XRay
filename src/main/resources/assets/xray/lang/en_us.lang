@@ -1,6 +1,7 @@
+xray.gui.enabled=Enabled
+xray.gui.disabled=Disabled
+
 xray.gui.config.title=X Ray Config
-xray.gui.config.enabled=Enabled
-xray.gui.config.disabled=Disabled
 xray.gui.config.button.close=Close
 xray.gui.config.button.reload=Reload
 xray.gui.config.button.add_block=Add Block
@@ -14,6 +15,7 @@ xray.gui.config.show_active=Show Active
 xray.gui.edit.title=Edit Block
 xray.gui.edit.save=Save
 xray.gui.edit.delete=Delete
+xray.gui.edit.no_meta=No Meta
 xray.gui.edit.slider.alpha.prefix=Alpha:
 xray.gui.edit.slider.red.prefix=Red:
 xray.gui.edit.slider.green.prefix=Green:

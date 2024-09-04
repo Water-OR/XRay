@@ -9,11 +9,11 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 
 @SideOnly (Side.CLIENT)
 public class Utils {
-        public static void sendMessage(String msg) {
-                Minecraft.instance.player.sendMessage(new TextComponentString("[" + Tags.MOD_NAME + "] " + msg));
-        }
-        
         public static void sendFormatMessage(String key, Object... o) {
                 sendMessage(I18n.format(key, o).trim());
+        }
+        
+        public static void sendMessage(String msg) {
+                Minecraft.instance.player.sendMessage(new TextComponentString("[" + Tags.MOD_NAME + "] " + msg));
         }
 }

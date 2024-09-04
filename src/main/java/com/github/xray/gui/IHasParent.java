@@ -12,12 +12,12 @@ import org.jetbrains.annotations.NotNull;
 @SideOnly (Side.CLIENT)
 @Mod.EventBusSubscriber
 public interface IHasParent {
-        GuiScreen parent();
-        
         @SubscribeEvent
         static void onGuiOpen(@NotNull GuiOpenEvent event) {
                 if (event.getGui() == null && Minecraft.instance.currentScreen instanceof IHasParent) {
                         event.setGui(((IHasParent) Minecraft.instance.currentScreen).parent());
                 }
         }
+        
+        GuiScreen parent();
 }

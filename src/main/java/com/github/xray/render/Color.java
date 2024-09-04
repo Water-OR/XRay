@@ -18,11 +18,8 @@ public class Color {
         
         public Color(int rgba) { this.rgba = rgba; }
         
-        @Contract (value = "_ -> new", pure = true)
-        public static @NotNull Color fromRGBA(int rgba) { return new Color(rgba); }
-        
-        @Contract (value = "_ -> new", pure = true)
-        public static @NotNull Color fromARGB(int argb) { return new Color((argb << 8) | (argb >>> 24)); }
+        @Contract (value = " -> new", pure = true)
+        public static @NotNull Color white() { return Color.fromRGB(16777215); }
         
         @Contract (value = "_ -> new", pure = true)
         public static @NotNull Color fromRGB(int rgb) { return new Color((rgb << 8) | 255); }
@@ -33,27 +30,12 @@ public class Color {
                 GL11.glColor4d(red / 255D, green / 255D, blue / 255D, alpha / 255D);
         }
         
-        public void setAlpha(int alpha) {
-                this.rgba &= 0xFFFFFF00;
-                this.rgba |= alpha & 0xFF;
+        public void progressGL() {
+                GL11.glColor4d(
+                        red() / 255D, green() / 255D,
+                        blue() / 255D, alpha() / 255D
+                );
         }
-        
-        public void setRed(int red) {
-                this.rgba &= 0x00FFFFFF;
-                this.rgba |= (red & 0xFF) << 24;
-        }
-        
-        public void setGreen(int green) {
-                this.rgba &= 0xFF00FFFF;
-                this.rgba |= (green & 0xFF) << 16;
-        }
-        
-        public void setBlue(int blue) {
-                this.rgba &= 0xFFFF00FF;
-                this.rgba |= (blue & 0xFF) << 8;
-        }
-        
-        public int alpha() { return rgba & 0xFF; }
         
         public int red() { return (rgba >> 24) & 0xFF; }
         
@@ -61,12 +43,7 @@ public class Color {
         
         public int blue() { return (rgba >> 8) & 0xFF; }
         
-        public void progressGL() {
-                GL11.glColor4d(
-                        red() / 255D, green() / 255D,
-                        blue() / 255D, alpha() / 255D
-                );
-        }
+        public int alpha() { return rgba & 0xFF; }
         
         public void progressGLAlpha(double modifier) {
                 GL11.glColor4d(
@@ -93,6 +70,26 @@ public class Color {
                 
                 reader.endObject();
                 return this;
+        }
+        
+        public void setAlpha(int alpha) {
+                this.rgba &= 0xFFFFFF00;
+                this.rgba |= alpha & 0xFF;
+        }
+        
+        public void setRed(int red) {
+                this.rgba &= 0x00FFFFFF;
+                this.rgba |= (red & 0xFF) << 24;
+        }
+        
+        public void setGreen(int green) {
+                this.rgba &= 0xFF00FFFF;
+                this.rgba |= (green & 0xFF) << 16;
+        }
+        
+        public void setBlue(int blue) {
+                this.rgba &= 0xFFFF00FF;
+                this.rgba |= (blue & 0xFF) << 8;
         }
         
         public JsonWriter write(@NotNull JsonWriter writer) throws IOException {

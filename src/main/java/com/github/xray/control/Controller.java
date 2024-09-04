@@ -1,13 +1,9 @@
 package com.github.xray.control;
 
 import com.github.xray.render.Color;
-import com.github.xray.stores.BlockData;
-import com.github.xray.stores.BlockInfo;
 import com.github.xray.stores.BlockStores;
-import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
-import net.minecraft.init.Blocks;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3i;
 import net.minecraftforge.event.world.BlockEvent;
@@ -27,7 +23,16 @@ import java.util.concurrent.Future;
 @SideOnly (Side.CLIENT)
 @Mod.EventBusSubscriber
 public class Controller {
-        private static int compare(Vec3i x, Vec3i y) {
+        public static final Minecraft mc = Minecraft.instance;
+        public static final SortedMap<Vec3i, Color> ores = Collections.synchronizedSortedMap(new TreeMap<>(Controller::compare));
+        public static boolean active = false;
+        public static Vec3i prevPos;
+        public static int ticks = 0;
+        public static int seconds = 0;
+        private static ExecutorService executor;
+        private static Future<?> task;
+
+        private static int compare(@NotNull Vec3i x, @NotNull Vec3i y) {
                 BlockPos pos = mc.player.getPosition();
                 long distanceX = (long) (x.getX() - pos.getX()) * (long) (x.getX() - pos.getX()) +
                                  (long) (x.getY() - pos.getY()) * (long) (x.getY() - pos.getY()) +
@@ -38,49 +43,12 @@ public class Controller {
                 return distanceX == distanceY ? x.compareTo(y) : (int) (distanceY - distanceX);
         }
         
-        public static final Minecraft mc = Minecraft.instance;
-        public static final SortedMap<Vec3i, BlockData> BLOCKS = Collections.synchronizedSortedMap(new TreeMap<>(Controller::compare));
-        public static final Set<Block> blackList = new HashSet<>();
-        
-        private static ExecutorService executor;
-        private static Future<?> task;
-        
-        public static boolean active = false;
-        
-        public static Vec3i prevPos;
-        
-        public static boolean moved() {
-                return prevPos == null ||
-                       prevPos.getX() != mc.player.getPosition().getX() ||
-                       prevPos.getZ() != mc.player.getPosition().getZ() ||
-                       prevPos.getY() != mc.player.getPosition().getY();
-        }
-        
-        public static boolean active() { return active && mc.world != null && mc.player != null; }
-        
-        public static void scan(Vec3i current) {
-                final RangeWrapper range = new RangeWrapper(current);
-                final SortedMap<Vec3i, BlockData> render = new TreeMap<>(Controller::compare);
-                
-                range.forEach((pos, state) -> {
-                        final Block block = state.getBlock();
-                        if (blackList.contains(block)) { return; }
-                        BlockData data = BlockStores.DATA_MAP.get(BlockInfo.fromState(state));
-                        if (data != null && data.active) {
-                                if (render.containsKey(pos)) { return; }
-                                render.put(pos, data);
-                        }
-                });
-                
-                BLOCKS.clear();
-                BLOCKS.putAll(render);
-        }
-        
-        public static void update(Vec3i pos, IBlockState state, boolean option) {
-                if (!active()) { return; }
-                BlockData data = BlockStores.DATA_MAP.get(BlockInfo.fromState(state));
-                if (data == null) { return; }
-                if (option) { BLOCKS.put(pos, data); } else { BLOCKS.remove(pos); }
+        public static void start() {
+                if (active) { return; }
+                ores.clear();
+                executor = Executors.newSingleThreadExecutor();
+                active = true;
+                scheduleScan(true);
         }
         
         public static synchronized void scheduleScan(boolean force) {
@@ -90,12 +58,26 @@ public class Controller {
                 }
         }
         
-        public static void start() {
-                if (active) { return; }
-                BLOCKS.clear();
-                executor = Executors.newSingleThreadExecutor();
-                active = true;
-                scheduleScan(true);
+        public static boolean active() { return active && mc.world != null && mc.player != null; }
+        
+        public static boolean moved() {
+                return prevPos == null ||
+                       prevPos.getX() != mc.player.getPosition().getX() ||
+                       prevPos.getZ() != mc.player.getPosition().getZ() ||
+                       prevPos.getY() != mc.player.getPosition().getY();
+        }
+        
+        public static void scan(Vec3i current) {
+                final RangeWrapper range = new RangeWrapper(current);
+                final Map<Vec3i, Color> render = new HashMap<>();
+                
+                range.forEach((pos, state) -> {
+                        Color color = BlockStores.color(state);
+                        if (color != null) { render.put(pos, color); }
+                });
+                
+                ores.clear();
+                ores.putAll(render);
         }
         
         public static void stop() {
@@ -107,6 +89,14 @@ public class Controller {
         @SubscribeEvent
         public static void onBreak(BlockEvent.@NotNull BreakEvent event) { update(event.getPos(), event.getState(), false); }
         
+        public static void update(Vec3i pos, IBlockState state, boolean option) {
+                if (!active()) { return; }
+                if (option) {
+                        Color color = BlockStores.color(state);
+                        if (color != null) { ores.put(pos, color); }
+                } else { ores.remove(pos); }
+        }
+        
         @SubscribeEvent
         public static void onPlace(BlockEvent.@NotNull EntityPlaceEvent event) { update(event.getPos(), event.getState(), true); }
         
@@ -115,12 +105,11 @@ public class Controller {
         
         @SubscribeEvent
         public static void onTickEnd(TickEvent.@NotNull ClientTickEvent event) {
-                if (event.phase == TickEvent.Phase.END) { scheduleScan(false); }
-        }
-        
-        static {
-                blackList.add(Blocks.AIR);
-                blackList.add(Blocks.BEDROCK);
-                blackList.add(Blocks.STONE);
+                if (event.phase == TickEvent.Phase.END) {
+                        scheduleScan(false);
+                        ticks = (ticks + 1) % 20;
+                        if (ticks == 0) { ++seconds; }
+                        if (seconds < 0) { seconds = 0; }
+                }
         }
 }

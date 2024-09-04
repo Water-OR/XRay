@@ -12,10 +12,20 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 
-@SideOnly(Side.CLIENT)
+@SideOnly (Side.CLIENT)
 public class ConfigManager {
         public static final File DIRECTORY = Loader.instance().getConfigDir();
         public static final File CONFIG = new File(DIRECTORY, "xray.json");
+        
+        public static void safe_load() {
+                try {
+                        load();
+                } catch (IOException exception) {
+                        XRay.LOGGER.warn("Failed in loading config!");
+                        XRay.LOGGER.error(exception.getLocalizedMessage());
+                        exception.printStackTrace();
+                }
+        }
         
         public static void load() throws IOException {
                 if (!CONFIG.exists()) { return; }
@@ -43,6 +53,15 @@ public class ConfigManager {
                 reader.close();
         }
         
+        public static void safe_save() {
+                try {
+                        save();
+                } catch (IOException exception) {
+                        XRay.LOGGER.warn("Failed in saving config!");
+                        exception.printStackTrace();
+                }
+        }
+        
         public static void save() throws IOException {
                 JsonWriter writer = new JsonWriter(new FileWriter(CONFIG));
                 writer.setSerializeNulls(true);
@@ -54,24 +73,5 @@ public class ConfigManager {
                       .name("Outline Thickness").value(XRayConfig.outlineThickness);
                 XRayConfig.BLOCK_STORES.write(writer.name("Block Stores")).endObject();
                 writer.close();
-        }
-        
-        public static void safe_load() {
-                try {
-                        load();
-                } catch (IOException exception) {
-                        XRay.LOGGER.warn("Failed in loading config!");
-                        XRay.LOGGER.error(exception.getLocalizedMessage());
-                        exception.printStackTrace();
-                }
-        }
-        
-        public static void safe_save() {
-                try {
-                        save();
-                } catch (IOException exception) {
-                        XRay.LOGGER.warn("Failed in saving config!");
-                        exception.printStackTrace();
-                }
         }
 }

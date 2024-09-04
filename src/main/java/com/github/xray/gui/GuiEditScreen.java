@@ -23,18 +23,18 @@ import java.io.IOException;
 public class GuiEditScreen extends GuiScreen implements IHasParent, IXrayBG {
         private static final int BUTTON_SAVE = 0;
         private static final int BUTTON_DELETE = 1;
+        private static final int BUTTON_NO_META = 2;
         private static final int xSize = 384;
         private static final int ySize = 222;
-        private int drawX;
-        private int drawY;
         private final BlockData data;
         private final GuiConfigScreen parent;
-        
         private final GuiTextField nameBar = new GuiTextField(0, Minecraft.instance.fontRenderer, 12, 16, 198, 24);
         private final GuiSlider sliderAlpha;
         private final GuiSlider sliderRed;
         private final GuiSlider sliderGreen;
         private final GuiSlider sliderBlue;
+        private int drawX;
+        private int drawY;
         
         public GuiEditScreen(GuiConfigScreen parent, @NotNull BlockData data) {
                 this.parent = parent;
@@ -69,7 +69,8 @@ public class GuiEditScreen extends GuiScreen implements IHasParent, IXrayBG {
                 drawY = (height - ySize) / 2;
                 
                 addButton(new GuiButton(BUTTON_SAVE, drawX + 265, drawY + 150, 114, 20, I18n.format("xray.gui.edit.save").trim()));
-                addButton(new GuiButton(BUTTON_DELETE, drawX + 265, drawY + 52, 114, 20, I18n.format("xray.gui.edit.delete").trim()));
+                addButton(new GuiButton(BUTTON_DELETE, drawX + 265, drawY + 128, 114, 20, I18n.format("xray.gui.edit.delete").trim()));
+                addButton(new GuiButton(BUTTON_NO_META, drawX + 323, drawY + 52, 56, 20, ""));
         }
         
         @Override
@@ -77,8 +78,10 @@ public class GuiEditScreen extends GuiScreen implements IHasParent, IXrayBG {
                 if (button.id == BUTTON_SAVE) {
                         mc.player.closeScreen();
                 } else if (button.id == BUTTON_DELETE) {
-                        BlockStores.remove(data);
+                        BlockStores.remove(data.info);
                         mc.player.closeScreen();
+                } else if (button.id == BUTTON_NO_META) {
+                        data.toggleNoMeta();
                 }
         }
         
@@ -95,6 +98,9 @@ public class GuiEditScreen extends GuiScreen implements IHasParent, IXrayBG {
                 super.drawScreen(mouseX, mouseY, partialTicks);
                 
                 GL11.glTranslated(drawX, drawY, 0);
+                fontRenderer.drawStringWithShadow(I18n.format("xray.gui.edit.no_meta").trim(), 264, 58, 16777215);
+                drawCenteredString(fontRenderer, I18n.format("xray.gui." + (data.noMeta ? "enabled" : "disabled")).trim(),
+                                   351, 58, data.noMeta ? 65280 : 16711680);
                 
                 RenderHelper.enableGUIStandardItemLighting();
                 itemRender.renderItemAndEffectIntoGUI(data.getStack(), 223, 19);

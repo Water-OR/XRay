@@ -1,6 +1,7 @@
+xray.gui.enabled=启用
+xray.gui.disabled=禁用
+
 xray.gui.config.title=X Ray 配置
-xray.gui.config.enabled=启用
-xray.gui.config.disabled=禁用
 xray.gui.config.button.close=关闭
 xray.gui.config.button.reload=重载
 xray.gui.config.button.add_block=添加方块
@@ -14,6 +15,7 @@ xray.gui.config.show_active=显示开启
 xray.gui.edit.title=方块编辑
 xray.gui.edit.save=保存
 xray.gui.edit.delete=删除
+xray.gui.edit.no_meta=无meta
 xray.gui.edit.slider.alpha.prefix=透明度:
 xray.gui.edit.slider.red.prefix=红:
 xray.gui.edit.slider.green.prefix=绿:

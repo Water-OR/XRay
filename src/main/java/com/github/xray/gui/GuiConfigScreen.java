@@ -35,12 +35,6 @@ public class GuiConfigScreen extends GuiScreen implements IXrayBG {
         private static final int BUTTON_SHOW_ACTIVE = 4;
         private static final int xSize = 384;
         private static final int ySize = 222;
-        private int drawX;
-        private int drawY;
-        private int scale;
-        private String lastSearch = "";
-        private double newWidth;
-        
         private final GuiSlider radiusSlider = new GuiSlider(0, 12, 190, 232, 20,
                                                              I18n.format("xray.gui.config.slider.prefix").trim() + " ",
                                                              " " + I18n.format("xray.gui.config.slider.suffix").trim(),
@@ -49,6 +43,11 @@ public class GuiConfigScreen extends GuiScreen implements IXrayBG {
         private final GuiTextField widthBar = new GuiTextField(0, Minecraft.instance.fontRenderer, 323, 128, 56, 20);
         private final GuiTextField searchBar = new GuiTextField(0, Minecraft.instance.fontRenderer, 12, 16, 232, 24);
         private final ActiveList activeList = new ActiveList();
+        private int drawX;
+        private int drawY;
+        private int scale;
+        private String lastSearch = "";
+        private double newWidth;
         private List<BlockData> dataList = new ArrayList<>();
         
         public GuiConfigScreen() {
@@ -56,7 +55,7 @@ public class GuiConfigScreen extends GuiScreen implements IXrayBG {
                 widthBar.setCanLoseFocus(true);
                 searchBar.setText("");
                 searchBar.setCanLoseFocus(true);
-                dataList.addAll(BlockStores.DATA_SET);
+                dataList.addAll(BlockStores.DATA_MAP.values());
                 activeList.reload();
         }
         
@@ -80,9 +79,9 @@ public class GuiConfigScreen extends GuiScreen implements IXrayBG {
         public GuiConfigScreen reload() {
                 if (searchBar.getText().isEmpty()) {
                         dataList.clear();
-                        dataList.addAll(BlockStores.DATA_SET);
+                        dataList.addAll(BlockStores.DATA_MAP.values());
                 } else {
-                        dataList = BlockStores.DATA_SET.stream().filter(
+                        dataList = BlockStores.DATA_MAP.values().stream().filter(
                                 data -> data.name().toLowerCase().contains(searchBar.getText().toLowerCase())
                         ).collect(Collectors.toList());
                 }
@@ -118,11 +117,11 @@ public class GuiConfigScreen extends GuiScreen implements IXrayBG {
                 
                 GL11.glTranslated(drawX, drawY, 0);
                 fontRenderer.drawStringWithShadow(I18n.format("xray.gui.config.fade").trim(), 264, 80, 16777215);
-                drawCenteredString(fontRenderer, I18n.format("xray.gui.config." + (XRayConfig.fade ? "enabled" : "disabled")).trim(),
+                drawCenteredString(fontRenderer, I18n.format("xray.gui." + (XRayConfig.fade ? "enabled" : "disabled")).trim(),
                                    351, 80, XRayConfig.fade ? 65280 : 16711680);
                 
                 fontRenderer.drawStringWithShadow(I18n.format("xray.gui.config.show_active").trim(), 264, 102, 16777215);
-                drawCenteredString(fontRenderer, I18n.format("xray.gui.config." + (XRayConfig.showActive ? "enabled" : "disabled")).trim(),
+                drawCenteredString(fontRenderer, I18n.format("xray.gui." + (XRayConfig.showActive ? "enabled" : "disabled")).trim(),
                                    351, 102, XRayConfig.showActive ? 65280 : 16711680);
                 
                 fontRenderer.drawStringWithShadow(I18n.format("xray.gui.config.width").trim(), 264, 134, 16777215);
@@ -231,49 +230,6 @@ public class GuiConfigScreen extends GuiScreen implements IXrayBG {
                 
                 private void clampScroll() { scrolled = Math.max(0, Math.min(scrollableHeight, scrolled)); }
                 
-                public void drawElement(int i, int left, int right, int top, int bottom) {
-                        final BlockData data = dataList.get(i);
-                        fontRenderer.drawString(data.getStack().getDisplayName(), left + 30, top + 5, -1);
-                        fontRenderer.drawString(I18n.format("xray.gui.config." + (data.active ? "enabled" : "disabled")).trim(),
-                                                left + 30, top + 15, data.active ? 65280 : 16711680);
-                        
-                        RenderHelper.enableGUIStandardItemLighting();
-                        itemRender.renderItemAndEffectIntoGUI(data.getStack(), left + 5, top + 5);
-                        RenderHelper.disableStandardItemLighting();
-                        
-                        int mid = top + elementHeight / 2;
-                        
-                        int oldPolygonMode = GL11.glGetInteger(GL11.GL_POLYGON_MODE);
-                        GL11.glDisable(GL11.GL_TEXTURE_2D);
-                        GL11.glPolygonMode(GL11.GL_FRONT_AND_BACK, GL11.GL_FILL);
-                        Color.progressGL3(32, 32, 32);
-                        GL11.glBegin(GL11.GL_QUADS);
-                        
-                        GL11.glVertex2d(right - 20, mid - 6);
-                        GL11.glVertex2d(right - 20, mid + 4);
-                        GL11.glVertex2d(right - 10, mid + 4);
-                        GL11.glVertex2d(right - 10, mid - 6);
-                        
-                        data.color.progressGL();
-                        
-                        GL11.glVertex2d(right - 18, mid - 4);
-                        GL11.glVertex2d(right - 18, mid + 2);
-                        GL11.glVertex2d(right - 12, mid + 2);
-                        GL11.glVertex2d(right - 12, mid - 4);
-                        
-                        Color.progressGL3(167, 167, 167);
-                        
-                        GL11.glVertex2d(left, bottom - 2);
-                        GL11.glVertex2d(left, bottom);
-                        GL11.glVertex2d(right, bottom);
-                        GL11.glVertex2d(right, bottom - 2);
-                        
-                        GL11.glEnd();
-                        Color.progressGL3(255, 255, 255);
-                        GL11.glPolygonMode(GL11.GL_FRONT_AND_BACK, oldPolygonMode);
-                        GL11.glEnable(GL11.GL_TEXTURE_2D);
-                }
-                
                 public void draw(int mouseX, int mouseY) {
                         hovered = drawX <= mouseX && mouseX <= drawX + width &&
                                   drawY <= mouseY && mouseY <= drawY + height;
@@ -338,6 +294,49 @@ public class GuiConfigScreen extends GuiScreen implements IXrayBG {
                         GL11.glTranslated(-drawX, -drawY + scrolled, 0);
                 }
                 
+                public void drawElement(int i, int left, int right, int top, int bottom) {
+                        final BlockData data = dataList.get(i);
+                        fontRenderer.drawString(data.getStack().getDisplayName(), left + 30, top + 5, -1);
+                        fontRenderer.drawString(I18n.format("xray.gui." + (data.active ? "enabled" : "disabled")).trim(),
+                                                left + 30, top + 15, data.active ? 65280 : 16711680);
+                        
+                        RenderHelper.enableGUIStandardItemLighting();
+                        itemRender.renderItemAndEffectIntoGUI(data.getStack(), left + 5, top + 5);
+                        RenderHelper.disableStandardItemLighting();
+                        
+                        int mid = top + elementHeight / 2;
+                        
+                        int oldPolygonMode = GL11.glGetInteger(GL11.GL_POLYGON_MODE);
+                        GL11.glDisable(GL11.GL_TEXTURE_2D);
+                        GL11.glPolygonMode(GL11.GL_FRONT_AND_BACK, GL11.GL_FILL);
+                        Color.progressGL3(32, 32, 32);
+                        GL11.glBegin(GL11.GL_QUADS);
+                        
+                        GL11.glVertex2d(right - 20, mid - 6);
+                        GL11.glVertex2d(right - 20, mid + 4);
+                        GL11.glVertex2d(right - 10, mid + 4);
+                        GL11.glVertex2d(right - 10, mid - 6);
+                        
+                        data.color.progressGL();
+                        
+                        GL11.glVertex2d(right - 18, mid - 4);
+                        GL11.glVertex2d(right - 18, mid + 2);
+                        GL11.glVertex2d(right - 12, mid + 2);
+                        GL11.glVertex2d(right - 12, mid - 4);
+                        
+                        Color.progressGL3(167, 167, 167);
+                        
+                        GL11.glVertex2d(left, bottom - 2);
+                        GL11.glVertex2d(left, bottom);
+                        GL11.glVertex2d(right, bottom);
+                        GL11.glVertex2d(right, bottom - 2);
+                        
+                        GL11.glEnd();
+                        Color.progressGL3(255, 255, 255);
+                        GL11.glPolygonMode(GL11.GL_FRONT_AND_BACK, oldPolygonMode);
+                        GL11.glEnable(GL11.GL_TEXTURE_2D);
+                }
+                
                 public void mouseClicked(int mouseX, int mouseY, int mouseButton) {
                         if (!hovered) { return; }
                         
@@ -355,7 +354,7 @@ public class GuiConfigScreen extends GuiScreen implements IXrayBG {
                         if (i >= dataList.size()) { return; }
                         
                         if (mouseButton == 0) {
-                                dataList.get(i).toggle();
+                                dataList.get(i).toggleActive();
                         } else if (mouseButton == 1) {
                                 mc.displayGuiScreen(new GuiEditScreen(GuiConfigScreen.this, dataList.get(i)));
                         }

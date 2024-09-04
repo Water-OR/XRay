@@ -1,6 +1,5 @@
 package com.github.xray.gui;
 
-import com.github.xray.control.Controller;
 import com.github.xray.render.Color;
 import com.github.xray.stores.BlockData;
 import com.github.xray.stores.BlockInfo;
@@ -33,28 +32,26 @@ import java.util.List;
 
 @SideOnly (Side.CLIENT)
 public class GuiAddBlock extends GuiScreen implements IHasParent, IXrayBG {
-        private final GuiConfigScreen parent;
-        
         private static final int BUTTON_BACK = 0;
         private static final int BUTTON_ADD_LOOK = 1;
         private static final int BUTTON_ADD_HAND = 2;
         private static final int xSize = 384;
         private static final int ySize = 222;
-        private int drawX;
-        private int drawY;
-        private int scale;
-        private String lastSearch = "";
-        
+        private final GuiConfigScreen parent;
         private final GuiTextField searchBar = new GuiTextField(0, Minecraft.instance.fontRenderer, 12, 16, 232, 24);
         private final ActiveList activeList = new ActiveList();
         private final List<ItemStack> blockList = new ArrayList<>();
         private final NonNullList<ItemStack> blockListWrapper = new NonNullList<ItemStack>(blockList, ItemStack.EMPTY) {
                 @Override
                 public void add(int i, @NotNull ItemStack stack) {
-                        if (!stack.isEmpty() && stack.getItem() instanceof ItemBlock && !Controller.blackList.contains(((ItemBlock) stack.getItem()).getBlock()) &&
+                        if (!stack.isEmpty() && stack.getItem() instanceof ItemBlock && !BlockStores.blackList.contains(((ItemBlock) stack.getItem()).getBlock()) &&
                             !BlockStores.DATA_MAP.containsKey(BlockInfo.fromStack(stack)) && stack.getDisplayName().contains(searchBar.getText())) { super.add(i, stack); }
                 }
         };
+        private int drawX;
+        private int drawY;
+        private int scale;
+        private String lastSearch = "";
         private ItemStack current = ItemStack.EMPTY;
         
         public GuiAddBlock(GuiConfigScreen parent) {
@@ -63,6 +60,13 @@ public class GuiAddBlock extends GuiScreen implements IHasParent, IXrayBG {
                 searchBar.setCanLoseFocus(true);
                 
                 reload();
+        }
+        
+        public void reload() {
+                blockList.clear();
+                CreativeTabs.SEARCH.displayAllRelevantItems(blockListWrapper);
+                
+                activeList.reload();
         }
         
         @Override
@@ -75,10 +79,10 @@ public class GuiAddBlock extends GuiScreen implements IHasParent, IXrayBG {
                         Block block = ((ItemBlock) stack.getItem()).getBlock();
                         if (BlockStores.DATA_MAP.containsKey(new BlockInfo(block, stack.getMetadata()))) {
                                 Utils.sendFormatMessage("xray.msg.duplicate");
-                        } else if (Controller.blackList.contains(block)) {
+                        } else if (BlockStores.blackList.contains(block)) {
                                 Utils.sendFormatMessage("xray.msg.blacklist");
                         } else {
-                                BlockData data = new BlockData("", block, stack.getMetadata(), true, Color.fromRGB(16777215));
+                                BlockData data = new BlockData(block, stack.getMetadata());
                                 BlockStores.add(data);
                                 mc.displayGuiScreen(new GuiEditScreen(this.parent, data));
                         }
@@ -88,22 +92,15 @@ public class GuiAddBlock extends GuiScreen implements IHasParent, IXrayBG {
                                 IBlockState state = mc.world.getBlockState(rayed.getBlockPos());
                                 if (BlockStores.DATA_MAP.containsKey(BlockInfo.fromState(state))) {
                                         Utils.sendFormatMessage("xray.msg.duplicate");
-                                } else if (Controller.blackList.contains(state.getBlock())) {
+                                } else if (BlockStores.blackList.contains(state.getBlock())) {
                                         Utils.sendFormatMessage("xray.msg.blacklist");
                                 } else {
-                                        BlockData data = new BlockData("", state.getBlock(), state.getBlock().getMetaFromState(state), true, Color.fromRGB(16777215));
+                                        BlockData data = new BlockData(state.getBlock(), state.getBlock().getMetaFromState(state));
                                         BlockStores.add(data);
                                         mc.displayGuiScreen(new GuiEditScreen(this.parent, data));
                                 }
                         } else { Utils.sendFormatMessage("xray.msg.nothing_find"); }
                 }
-        }
-        
-        public void reload() {
-                blockList.clear();
-                CreativeTabs.SEARCH.displayAllRelevantItems(blockListWrapper);
-                
-                activeList.reload();
         }
         
         @Override
@@ -217,32 +214,6 @@ public class GuiAddBlock extends GuiScreen implements IHasParent, IXrayBG {
                 
                 private void clampScroll() { scrolled = Math.max(0, Math.min(scrollableHeight, scrolled)); }
                 
-                public void drawElement(int i, int left, int right, int top, int bottom) {
-                        final ItemStack block = blockList.get(i);
-                        
-                        fontRenderer.drawString(block.getDisplayName(), left + 30, top + 10, 16777215);
-                        
-                        RenderHelper.enableGUIStandardItemLighting();
-                        itemRender.renderItemAndEffectIntoGUI(block, left + 5, top + 5);
-                        RenderHelper.disableStandardItemLighting();
-                        
-                        int oldPolygonMode = GL11.glGetInteger(GL11.GL_POLYGON_MODE);
-                        GL11.glDisable(GL11.GL_TEXTURE_2D);
-                        GL11.glPolygonMode(GL11.GL_FRONT_AND_BACK, GL11.GL_FILL);
-                        Color.progressGL3(167, 167, 167);
-                        GL11.glBegin(GL11.GL_QUADS);
-                        
-                        GL11.glVertex2d(left, bottom - 2);
-                        GL11.glVertex2d(left, bottom);
-                        GL11.glVertex2d(right, bottom);
-                        GL11.glVertex2d(right, bottom - 2);
-                        
-                        GL11.glEnd();
-                        Color.progressGL3(255, 255, 255);
-                        GL11.glPolygonMode(GL11.GL_FRONT_AND_BACK, oldPolygonMode);
-                        GL11.glEnable(GL11.GL_TEXTURE_2D);
-                }
-                
                 public void draw(int mouseX, int mouseY) {
                         hovered = drawX <= mouseX && mouseX <= drawX + width &&
                                   drawY <= mouseY && mouseY <= drawY + height;
@@ -307,6 +278,32 @@ public class GuiAddBlock extends GuiScreen implements IHasParent, IXrayBG {
                         GL11.glTranslated(-drawX, -drawY + scrolled, 0);
                 }
                 
+                public void drawElement(int i, int left, int right, int top, int bottom) {
+                        final ItemStack block = blockList.get(i);
+                        
+                        fontRenderer.drawString(block.getDisplayName(), left + 30, top + 10, 16777215);
+                        
+                        RenderHelper.enableGUIStandardItemLighting();
+                        itemRender.renderItemAndEffectIntoGUI(block, left + 5, top + 5);
+                        RenderHelper.disableStandardItemLighting();
+                        
+                        int oldPolygonMode = GL11.glGetInteger(GL11.GL_POLYGON_MODE);
+                        GL11.glDisable(GL11.GL_TEXTURE_2D);
+                        GL11.glPolygonMode(GL11.GL_FRONT_AND_BACK, GL11.GL_FILL);
+                        Color.progressGL3(167, 167, 167);
+                        GL11.glBegin(GL11.GL_QUADS);
+                        
+                        GL11.glVertex2d(left, bottom - 2);
+                        GL11.glVertex2d(left, bottom);
+                        GL11.glVertex2d(right, bottom);
+                        GL11.glVertex2d(right, bottom - 2);
+                        
+                        GL11.glEnd();
+                        Color.progressGL3(255, 255, 255);
+                        GL11.glPolygonMode(GL11.GL_FRONT_AND_BACK, oldPolygonMode);
+                        GL11.glEnable(GL11.GL_TEXTURE_2D);
+                }
+                
                 public void mouseClicked(int mouseX, int mouseY) {
                         if (!hovered) { return; }
                         
@@ -319,7 +316,7 @@ public class GuiAddBlock extends GuiScreen implements IHasParent, IXrayBG {
                                 return;
                         }
                         
-                        final BlockData newData = new BlockData("", ((ItemBlock) current.getItem()).getBlock(), current.getMetadata(), true, Color.fromRGB(16777215));
+                        final BlockData newData = new BlockData(((ItemBlock) current.getItem()).getBlock(), current.getMetadata());
                         BlockStores.add(newData);
                         mc.displayGuiScreen(new GuiEditScreen(parent, newData));
                 }

@@ -18,10 +18,14 @@ import java.util.List;
 @SideOnly (Side.CLIENT)
 @Mod.EventBusSubscriber
 public class XRayKeys {
-        private static final List<KeyBinding> KEYS = new ArrayList<>();
-        
         public static final KeyBinding OPEN_MENU;
         public static final KeyBinding TOGGLE_XRAY;
+        private static final List<KeyBinding> KEYS = new ArrayList<>();
+        
+        static {
+                OPEN_MENU = add("open_menu", 26);
+                TOGGLE_XRAY = add("toggle_xray", 27);
+        }
         
         private static @NotNull KeyBinding add(String name, int key) {
                 KeyBinding result = new KeyBinding("xray.key." + name, key, Tags.MOD_NAME);
@@ -30,11 +34,6 @@ public class XRayKeys {
         }
         
         public static void init() { KEYS.forEach(ClientRegistry::registerKeyBinding); }
-        
-        static {
-                OPEN_MENU = add("open_menu", 26);
-                TOGGLE_XRAY = add("toggle_xray", 27);
-        }
         
         @SubscribeEvent
         public static void onKey(InputEvent.KeyInputEvent event) {
